@@ -2,10 +2,124 @@
 @tailwind components;
 @tailwind utilities;
 
-:root { color-scheme: dark; }
+/* ===================== THEME VARIABLES ===================== */
+:root {
+  --bg: #0b0d10;
+  --text: #e6e6e6;
+  --muted: rgba(230,230,230,0.7);
+  --surface: rgba(255,255,255,0.055); /* softer */
+  --surface-2: rgba(255,255,255,0.035);
+  --border: rgba(255,255,255,0.14);   /* clearer hairline */
+  --accent: #3b82f6;                  /* Blue base */
+  --accent-2: #60a5fa;                /* Lighter gradient end */
+  color-scheme: dark;
+}
+
+[data-theme='light'] {
+  --bg: #ffffff;
+  --text: #0b0d10;
+  --muted: rgba(11,13,16,0.65);
+  --surface: rgba(0,0,0,0.035);
+  --surface-2: rgba(0,0,0,0.02);
+  --border: rgba(0,0,0,0.12);
+  --accent: #2563eb;  /* Deeper blue for light mode */
+  --accent-2: #60a5fa;
+  color-scheme: light;
+}
+
+/* ===================== BASE ===================== */
 html, body { height: 100%; }
-body { @apply bg-navy text-white antialiased; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* container helper */
 .container { @apply mx-auto max-w-7xl px-6; }
-.btn { @apply inline-flex items-center gap-2 rounded-2xl px-5 py-3 font-medium bg-white text-black hover:bg-gray-200 transition; }
-.btn-secondary { @apply inline-flex items-center gap-2 rounded-2xl px-5 py-3 font-medium bg-transparent ring-1 ring-white/20 hover:bg-white/5; }
-.card { @apply rounded-2xl bg-white/5 border border-white/10 shadow-lg; }
+
+/* ===================== COMPONENT HELPERS ===================== */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem; /* ~rounded-2xl */
+  /* Softer elevation: less blur, less spread */
+  box-shadow:
+    0 8px 24px rgba(0,0,0,0.22),
+    0 1px 0 rgba(255,255,255,0.03) inset;
+}
+
+/* Primary button (uses gradient) */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  border-radius: 1rem;
+  padding: .75rem 1.25rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #fff;
+  transition: all .2s ease;
+}
+.btn:hover {
+  opacity: .96;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 26px color-mix(in oklab, var(--accent) 18%, transparent);
+}
+
+/* Secondary button */
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  border-radius: 1rem;
+  padding: .75rem 1.25rem;
+  font-weight: 500;
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  transition: background .15s ease, opacity .15s ease, transform .15s ease, box-shadow .2s ease, border-color .2s ease;
+}
+.btn-secondary:hover {
+  opacity: .95;
+  transform: translateY(-1px);
+  border-color: color-mix(in oklab, var(--accent) 45%, var(--border));
+  box-shadow: 0 6px 22px color-mix(in oklab, var(--accent) 12%, transparent);
+}
+
+/* Sticky glass header */
+.nav-glass {
+  position: sticky;
+  top: 0; z-index: 50;
+  backdrop-filter: saturate(180%) blur(10px);
+  background: color-mix(in oklab, var(--bg) 88%, transparent);
+  border-bottom: 1px solid var(--border);
+}
+
+/* Small button size for nav */
+.btn-sm {
+  padding: .5rem .9rem;
+  border-radius: .75rem;
+  font-weight: 600;
+  font-size: .9rem;
+}
+
+/* Generic gradient utility (for backgrounds) */
+.gradient-accent {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+}
+
+/* Gradient text (used in hero headline) */
+.gradient-accent-text {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  display: inline;
+}
+
+/* ===================== UTILITIES ===================== */
+a { color: var(--accent); transition: color .2s ease; }
+a:hover { color: var(--accent-2); }

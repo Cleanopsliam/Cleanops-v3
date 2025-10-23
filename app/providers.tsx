@@ -2,6 +2,7 @@
 import { createContext, useContext, useMemo } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { ThemeProvider } from '@/components/theme/ThemeProvider'
 
 const SupabaseCtx = createContext<SupabaseClient | null>(null)
 
@@ -33,7 +34,11 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR-ANON-PUBLIC-KEY`}
     )
   }
 
-  return <SupabaseCtx.Provider value={supabase}>{children}</SupabaseCtx.Provider>
+  return (
+    <ThemeProvider>
+      <SupabaseCtx.Provider value={supabase}>{children}</SupabaseCtx.Provider>
+    </ThemeProvider>
+  )
 }
 
 export function useSupabase() {
