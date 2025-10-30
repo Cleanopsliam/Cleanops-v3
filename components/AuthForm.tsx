@@ -1,88 +1,71 @@
-'use client'
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { useSupabase } from '@/app/providers'
+"use client";
 
-export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [info, setInfo] = useState<string | null>(null)
-  const router = useRouter()
-  const supabase = useSupabase()
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { getBrowserSupabase } from "@/lib/supabase/client";
 
-  const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
-    setInfo(null)
+type Props = { mode: "sign-in" | "sign-up" };
 
-    try {
-      if (mode === 'sign-in') {
-        const { error } = await supabase.auth.signInWithPassword({ email, password })
-        if (error) throw error
-        router.push('/dashboard')
-        router.refresh()
-        return
-      }
+export function AuthForm({ mode }: Props) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
-      // SIGN-UP flow
-      const origin = typeof window !== 'undefined' ? window.location.origin : ''
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: origin ? `${origin}/auth/callback` : undefined
-        }
-      })
-      if (error) throw error
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setPending(true);
+    const supabase = getBrowserSupabase();
 
-      // Two cases:
-      // A) If your Supabase project DISABLES "Email Confirmations", you'll have a session immediately.
-      // B) If confirmations are ENABLED, no session yet; user must click the email link.
-      if (data.session) {
-        router.push('/dashboard')
-        router.refresh()
-      } else {
-        setInfo('Check your email — click the sign-in link to finish setting up your account.')
-      }
-    } catch (err: any) {
-      setError(err.message || 'Something went wrong')
-    } finally {
-      setLoading(false)
+    const fn =
+      mode === "sign-in"
+        ? supabase.auth.signInWithPassword({ email, password })
+        : supabase.auth.signUp({ email, password });
+
+    const { error } = await fn;
+    setPending(false);
+
+    if (error) {
+      setError(error.message);
+      return;
     }
+
+    // On success, Supabase writes sb-<project-ref>-auth-token cookie in the browser.
+    // Kick to dashboard and let server components see the cookie.
+    router.replace("/dashboard");
+    router.refresh();
   }
 
   return (
-    <form onSubmit={onSubmit} className="max-w-md space-y-4">
-      <div>
-        <label className="block text-sm mb-1">Email</label>
-        <input
-          type="email"
-          className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 focus:outline-none"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-      </div>
-      <div>
-        <label className="block text-sm mb-1">Password</label>
-        <input
-          type="password"
-          className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 focus:outline-none"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-      </div>
-
-      {error && <p className="text-red-400 text-sm">{error}</p>}
-      {info && <p className="text-mint text-sm">{info}</p>}
-
-      <button disabled={loading} className="btn w-full justify-center">
-        {loading ? 'Please wait…' : mode === 'sign-in' ? 'Sign in' : 'Create account'}
+    <form onSubmit={onSubmit} className="grid gap-4 max-w-md">
+      <input
+        className="w-full rounded-md px-3 py-2 bg-white/10 border border-white/20"
+        type="email"
+        placeholder="you@example.com"
+        autoComplete="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        required
+      />
+      <input
+        className="w-full rounded-md px-3 py-2 bg-white/10 border border-white/20"
+        type="password"
+        placeholder="••••••••"
+        autoComplete={mode === "sign-in" ? "current-password" : "new-password"}
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        required
+      />
+      {error ? <p className="text-red-400 text-sm">{error}</p> : null}
+      <button
+        type="submit"
+        disabled={pending}
+        className="rounded-md bg-white text-black px-4 py-2 disabled:opacity-50"
+      >
+        {mode === "sign-in" ? (pending ? "Signing in..." : "Sign in") : (pending ? "Creating..." : "Create account")}
       </button>
     </form>
-  )
+  );
 }

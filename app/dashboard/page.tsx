@@ -1,44 +1,44 @@
-import { redirect } from 'next/navigation';
-import { getServerSupabase } from '@/lib/supabase/server';
+import { redirect } from "next/navigation";
+import { getServerSupabase } from "@/lib/supabase/server";
 
-import { RangeTabs } from '@/components/dashboard/RangeTabs';
-import { Metrics } from '@/components/dashboard/Metrics';
-import { MonthGrid } from '@/components/dashboard/MonthGrid';
-import { DayAgenda } from '@/components/dashboard/DayAgenda';
-import type { Range, View, UiJob } from '@/components/dashboard/types';
+import { RangeTabs } from "@/components/dashboard/RangeTabs";
+import { Metrics } from "@/components/dashboard/Metrics";
+import { MonthGrid } from "@/components/dashboard/MonthGrid";
+import { DayAgenda } from "@/components/dashboard/DayAgenda";
+import type { Range, View, UiJob } from "@/components/dashboard/types";
 
 /** ===== Local-date helpers (no UTC conversions) ===== */
 function isoLocal(d: Date) {
   const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
   return `${y}-${m}-${day}`;
 }
 function dateFromISO(iso: string) {
-  const [y, m, d] = iso.split('-').map(Number);
+  const [y, m, d] = iso.split("-").map(Number);
   return new Date(y, (m as number) - 1, d);
 }
 function startOf(range: Range, d: Date) {
   const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  if (range === 'day') return x;
-  if (range === 'week') {
+  if (range === "day") return x;
+  if (range === "week") {
     const dow = x.getDay(); // 0=Sun
     const diff = (dow + 6) % 7; // Monday start
     x.setDate(x.getDate() - diff);
     return x;
   }
-  if (range === 'month') return new Date(x.getFullYear(), x.getMonth(), 1);
-  if (range === 'quarter') return new Date(x.getFullYear(), Math.floor(x.getMonth() / 3) * 3, 1);
-  if (range === 'year') return new Date(x.getFullYear(), 0, 1);
+  if (range === "month") return new Date(x.getFullYear(), x.getMonth(), 1);
+  if (range === "quarter") return new Date(x.getFullYear(), Math.floor(x.getMonth() / 3) * 3, 1);
+  if (range === "year") return new Date(x.getFullYear(), 0, 1);
   return x;
 }
 function endOf(range: Range, d: Date) {
   const s = startOf(range, d);
-  if (range === 'day') return new Date(s.getFullYear(), s.getMonth(), s.getDate() + 1);
-  if (range === 'week') return new Date(s.getFullYear(), s.getMonth(), s.getDate() + 7);
-  if (range === 'month') return new Date(s.getFullYear(), s.getMonth() + 1, 1);
-  if (range === 'quarter') return new Date(s.getFullYear(), s.getMonth() + 3, 1);
-  if (range === 'year') return new Date(s.getFullYear() + 1, 0, 1);
+  if (range === "day") return new Date(s.getFullYear(), s.getMonth(), s.getDate() + 1);
+  if (range === "week") return new Date(s.getFullYear(), s.getMonth(), s.getDate() + 7);
+  if (range === "month") return new Date(s.getFullYear(), s.getMonth() + 1, 1);
+  if (range === "quarter") return new Date(s.getFullYear(), s.getMonth() + 3, 1);
+  if (range === "year") return new Date(s.getFullYear() + 1, 0, 1);
   return s;
 }
 function addDaysISO(iso: string, inc: number) {
@@ -57,7 +57,7 @@ function hrefWith(params: Record<string, string | undefined>) {
     if (v) sp.set(k, v);
   });
   const q = sp.toString();
-  return q ? `/dashboard?${q}` : '/dashboard';
+  return q ? `/dashboard?${q}` : "/dashboard";
 }
 
 /** ===== Data fetch (Supabase) ===== */
@@ -66,9 +66,9 @@ type DbJob = {
   client_id: string | null;
   staff_id: string | null;
   title: string;
-  job_date: string;   // YYYY-MM-DD
+  job_date: string; // YYYY-MM-DD
   start_time: string; // HH:mm
-  end_time: string;   // HH:mm
+  end_time: string; // HH:mm
   amount: number | null;
   completed: boolean;
   clients?: { name: string } | { name: string }[] | null;
@@ -78,14 +78,14 @@ async function fetchJobsInRange(fromISO: string, toISO: string): Promise<UiJob[]
   const supabase = getServerSupabase();
 
   const { data, error } = await supabase
-    .from('jobs')
+    .from("jobs")
     .select(
-      'id, client_id, staff_id, title, job_date, start_time, end_time, amount, completed, clients(name)'
+      "id, client_id, staff_id, title, job_date, start_time, end_time, amount, completed, clients(name)"
     )
-    .gte('job_date', fromISO)
-    .lt('job_date', toISO)
-    .order('job_date', { ascending: true })
-    .order('start_time', { ascending: true });
+    .gte("job_date", fromISO)
+    .lt("job_date", toISO)
+    .order("job_date", { ascending: true })
+    .order("start_time", { ascending: true });
 
   if (error) {
     // Schema not ready? Just return no jobs.
@@ -113,22 +113,26 @@ async function fetchJobsInRange(fromISO: string, toISO: string): Promise<UiJob[]
   });
 }
 
-/** ===== PAGE ===== */
+/** ===== PAGE (Next 15: async searchParams) ===== */
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: { range?: Range; view?: View; cursor?: string };
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  // Await searchParams once (Next 15 async dynamic API)
+  const sp = await searchParams;
+  const pick = (v?: string | string[]) => (Array.isArray(v) ? v[0] : v);
+
   const supabase = getServerSupabase();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect('/auth/sign-in');
+  if (!user) redirect("/auth/sign-in");
 
-  const range: Range = (searchParams.range as Range) || 'week';
-  const view: View = (searchParams.view as View) || 'month';
+  const range = (pick(sp.range) as Range) ?? "week";
+  const view = (pick(sp.view) as View) ?? "month";
   const todayISO = isoLocal(new Date());
-  const cursorISO = searchParams.cursor || todayISO;
+  const cursorISO = pick(sp.cursor) ?? todayISO;
 
   const now = new Date();
   const fromISO = isoLocal(startOf(range, now));
@@ -146,12 +150,9 @@ export default async function DashboardPage({
   const dayJobs = jobsByDay.get(cursorISO) ?? [];
 
   // URL helpers for components
-  const makeRangeHref = (r: Range) =>
-    hrefWith({ range: r, view, cursor: cursorISO });
-  const makeMonthHrefPrev = () =>
-    hrefWith({ range, view: 'month', cursor: addMonthsISO(cursorISO, -1) });
-  const makeMonthHrefNext = () =>
-    hrefWith({ range, view: 'month', cursor: addMonthsISO(cursorISO, +1) });
+  const makeRangeHref = (r: Range) => hrefWith({ range: r, view, cursor: cursorISO });
+  const makeMonthHrefPrev = () => hrefWith({ range, view: "month", cursor: addMonthsISO(cursorISO, -1) });
+  const makeMonthHrefNext = () => hrefWith({ range, view: "month", cursor: addMonthsISO(cursorISO, +1) });
 
   return (
     <div className="space-y-8">
@@ -186,32 +187,32 @@ export default async function DashboardPage({
             </a>
             <a
               className={`px-3 py-2 rounded-2xl border ${
-                view === 'day' ? 'bg-white text-black' : 'bg-white/5 border-white/10'
+                view === "day" ? "bg-white text-black" : "bg-white/5 border-white/10"
               }`}
-              href={hrefWith({ range, view: 'day', cursor: cursorISO })}
+              href={hrefWith({ range, view: "day", cursor: cursorISO })}
             >
               Day
             </a>
             <a
               className={`px-3 py-2 rounded-2xl border ${
-                view === 'month' ? 'bg-white text-black' : 'bg-white/5 border-white/10'
+                view === "month" ? "bg-white text-black" : "bg-white/5 border-white/10"
               }`}
-              href={hrefWith({ range, view: 'month', cursor: cursorISO })}
+              href={hrefWith({ range, view: "month", cursor: cursorISO })}
             >
               Month
             </a>
           </div>
         </div>
 
-        {view === 'month' ? (
-<MonthGrid
-  cursorISO={cursorISO}
-  selectedISO={cursorISO}
-  jobsByDay={Object.fromEntries(jobsByDay)}
-  range={range}
-/>
+        {view === "month" ? (
+          <MonthGrid
+            cursorISO={cursorISO}
+            selectedISO={cursorISO}
+            jobsByDay={Object.fromEntries(jobsByDay)}
+            range={range}
+          />
         ) : (
-              <DayAgenda jobs={dayJobs} selectedDateISO={cursorISO} />
+          <DayAgenda jobs={dayJobs} selectedDateISO={cursorISO} />
         )}
       </section>
     </div>
