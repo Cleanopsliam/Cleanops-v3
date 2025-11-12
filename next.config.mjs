@@ -1,7 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    authInterrupts: true
-  }
-};
-export default nextConfig;
+    authInterrupts: false, // 🔴 turn this OFF while we debug cookies
+  },
+}
+
+export default nextConfig

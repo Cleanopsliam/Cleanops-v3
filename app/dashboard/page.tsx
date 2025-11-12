@@ -41,11 +41,6 @@ function endOf(range: Range, d: Date) {
   if (range === "year") return new Date(s.getFullYear() + 1, 0, 1);
   return s;
 }
-function addDaysISO(iso: string, inc: number) {
-  const d = dateFromISO(iso);
-  d.setDate(d.getDate() + inc);
-  return isoLocal(d);
-}
 function addMonthsISO(iso: string, inc: number) {
   const d = dateFromISO(iso);
   d.setMonth(d.getMonth() + inc);
@@ -75,7 +70,8 @@ type DbJob = {
 };
 
 async function fetchJobsInRange(fromISO: string, toISO: string): Promise<UiJob[]> {
-  const supabase = getServerSupabase();
+  // ✅ await the server client
+  const supabase = await getServerSupabase();
 
   const { data, error } = await supabase
     .from("jobs")
@@ -88,7 +84,6 @@ async function fetchJobsInRange(fromISO: string, toISO: string): Promise<UiJob[]
     .order("start_time", { ascending: true });
 
   if (error) {
-    // Schema not ready? Just return no jobs.
     return [];
   }
 
@@ -123,7 +118,8 @@ export default async function DashboardPage({
   const sp = await searchParams;
   const pick = (v?: string | string[]) => (Array.isArray(v) ? v[0] : v);
 
-  const supabase = getServerSupabase();
+  // ✅ await the server client
+  const supabase = await getServerSupabase();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -159,7 +155,7 @@ export default async function DashboardPage({
       {/* Header */}
       <div className="space-y-2">
         <h1 className="text-3xl font-semibold">Dashboard</h1>
-        <p className="text-white/70">Welcome, {user.email}</p>
+        <p className="text-[var(--muted)]">Welcome, {user.email}</p>
       </div>
 
       {/* Metrics */}
@@ -175,33 +171,6 @@ export default async function DashboardPage({
       <section className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold">Schedule</h2>
-          <div className="flex items-center gap-2">
-            <a className="btn-secondary" href={hrefWith({ range, view, cursor: todayISO })}>
-              Today
-            </a>
-            <a className="btn-secondary" href={makeMonthHrefPrev()}>
-              ◀
-            </a>
-            <a className="btn-secondary" href={makeMonthHrefNext()}>
-              ▶
-            </a>
-            <a
-              className={`px-3 py-2 rounded-2xl border ${
-                view === "day" ? "bg-white text-black" : "bg-white/5 border-white/10"
-              }`}
-              href={hrefWith({ range, view: "day", cursor: cursorISO })}
-            >
-              Day
-            </a>
-            <a
-              className={`px-3 py-2 rounded-2xl border ${
-                view === "month" ? "bg-white text-black" : "bg-white/5 border-white/10"
-              }`}
-              href={hrefWith({ range, view: "month", cursor: cursorISO })}
-            >
-              Month
-            </a>
-          </div>
         </div>
 
         {view === "month" ? (

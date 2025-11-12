@@ -7,11 +7,11 @@
   --bg: #0b0d10;
   --text: #e6e6e6;
   --muted: rgba(230,230,230,0.7);
-  --surface: rgba(255,255,255,0.055); /* softer */
+  --surface: rgba(255,255,255,0.055);
   --surface-2: rgba(255,255,255,0.035);
-  --border: rgba(255,255,255,0.14);   /* clearer hairline */
-  --accent: #3b82f6;                  /* Blue base */
-  --accent-2: #60a5fa;                /* Lighter gradient end */
+  --border: rgba(255,255,255,0.14);
+  --accent: #3b82f6;
+  --accent-2: #60a5fa;
   color-scheme: dark;
 }
 
@@ -22,13 +22,15 @@
   --surface: rgba(0,0,0,0.035);
   --surface-2: rgba(0,0,0,0.02);
   --border: rgba(0,0,0,0.12);
-  --accent: #2563eb;  /* Deeper blue for light mode */
+  --accent: #2563eb;
   --accent-2: #60a5fa;
   color-scheme: light;
 }
 
 /* ===================== BASE ===================== */
-html, body { height: 100%; }
+html, body {
+  height: 100%;
+}
 body {
   background: var(--bg);
   color: var(--text);
@@ -36,21 +38,22 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* container helper */
-.container { @apply mx-auto max-w-7xl px-6; }
+/* Container helper */
+.container {
+  @apply mx-auto max-w-7xl px-6;
+}
 
 /* ===================== COMPONENT HELPERS ===================== */
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 0.75rem; /* ~rounded-2xl */
-  /* Softer elevation: less blur, less spread */
+  border-radius: 0.75rem;
   box-shadow:
     0 8px 24px rgba(0,0,0,0.22),
     0 1px 0 rgba(255,255,255,0.03) inset;
 }
 
-/* Primary button (uses gradient) */
+/* Primary button */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -91,13 +94,14 @@ body {
 /* Sticky glass header */
 .nav-glass {
   position: sticky;
-  top: 0; z-index: 50;
+  top: 0;
+  z-index: 50;
   backdrop-filter: saturate(180%) blur(10px);
   background: color-mix(in oklab, var(--bg) 88%, transparent);
   border-bottom: 1px solid var(--border);
 }
 
-/* Small button size for nav */
+/* Small nav button */
 .btn-sm {
   padding: .5rem .9rem;
   border-radius: .75rem;
@@ -105,12 +109,10 @@ body {
   font-size: .9rem;
 }
 
-/* Generic gradient utility (for backgrounds) */
+/* Gradient utilities */
 .gradient-accent {
   background: linear-gradient(135deg, var(--accent), var(--accent-2));
 }
-
-/* Gradient text (used in hero headline) */
 .gradient-accent-text {
   background: linear-gradient(135deg, var(--accent), var(--accent-2));
   -webkit-background-clip: text;
@@ -120,6 +122,76 @@ body {
   display: inline;
 }
 
+/* ===================== INPUTS ===================== */
+.input {
+  @apply w-full rounded-xl border border-[var(--border)] bg-[var(--surface)]
+         px-3 py-2.5 text-sm leading-6 text-[var(--text)]
+         placeholder:text-[var(--muted)] shadow-sm;
+  transition: box-shadow .15s ease, background-color .15s ease, border-color .15s ease;
+}
+
+.input:hover {
+  @apply border-[rgba(0,0,0,.2)] dark:border-[rgba(255,255,255,.25)] bg-[var(--surface)];
+}
+
+.input:focus {
+  @apply outline-none ring-2 ring-[var(--accent)] border-transparent bg-[var(--surface)];
+}
+
+/* Select dropdowns */
+select.input {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 8l4 4 4-4' stroke='gray' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1rem;
+  padding-right: 2rem;
+}
+
+/* Time input polish */
+.input[type="time"] {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+.input[type="time"]::-webkit-calendar-picker-indicator {
+  opacity: .6;
+}
+.input[type="time"]::-webkit-datetime-edit {
+  padding: 0;
+}
+.input[type="time"]::-webkit-datetime-edit-text {
+  padding: 0 2px;
+}
+.input[type="time"]::-webkit-datetime-edit-hour-field,
+.input[type="time"]::-webkit-datetime-edit-minute-field {
+  padding: 0 1px;
+}
+
 /* ===================== UTILITIES ===================== */
-a { color: var(--accent); transition: color .2s ease; }
-a:hover { color: var(--accent-2); }
+a {
+  color: var(--accent);
+  transition: color .2s ease;
+}
+a:hover {
+  color: var(--accent-2);
+}
+
+/* chips inside the input */
+.badge {
+  @apply inline-flex items-center rounded-lg border border-[var(--border)]
+         bg-[var(--surface)] px-2 py-0.5 text-xs leading-none;
+}
+
+/* day buttons in the grid */
+.day-tile {
+  @apply select-none text-center rounded-xl border border-[var(--border)]
+         bg-[var(--surface)] py-2 text-sm cursor-pointer transition;
+}
+.day-tile:hover { @apply border-[color:rgba(255,255,255,.25)]; }
+.day-on { @apply bg-[color:var(--accent)] text-white border-transparent; }
+
+/* small utility used above */
+.chip {
+  @apply inline-flex items-center rounded-xl border border-[var(--border)]
+         bg-[var(--surface)] px-3 py-1.5 text-sm leading-none transition;
+}

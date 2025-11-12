@@ -1,4 +1,5 @@
 {
-  "/(marketing)/page": "app/(marketing)/page.js",
-  "/dashboard/page": "app/dashboard/page.js"
+  "/auth/callback/route": "app/auth/callback/route.js",
+  "/auth/sign-in/page": "app/auth/sign-in/page.js",
+  "/dashboard/staff/page": "app/dashboard/staff/page.js"
 }

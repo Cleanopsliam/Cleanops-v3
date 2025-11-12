@@ -1,8 +1,10 @@
 'use client'
+
 import { createContext, useContext, useMemo } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { ThemeProvider } from '@/components/theme/ThemeProvider'
+import AuthListener from '@/components/AuthListener' // ✅ listen & sync cookies
 
 const SupabaseCtx = createContext<SupabaseClient | null>(null)
 
@@ -21,21 +23,23 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   if (!supabase) {
     return (
-      <div style={{padding:'1rem',border:'1px solid rgba(255,255,255,0.2)',borderRadius:12}}>
-        <p style={{opacity:.9,marginBottom:8}}>
+      <div style={{ padding: '1rem', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 12 }}>
+        <p style={{ opacity: 0.9, marginBottom: 8 }}>
           Missing Supabase config. Add a <code>.env.local</code> in your project root:
         </p>
-        <pre style={{whiteSpace:'pre-wrap',opacity:.8}}>
+        <pre style={{ whiteSpace: 'pre-wrap', opacity: 0.8 }}>
 {`NEXT_PUBLIC_SUPABASE_URL=https://YOUR-PROJECT-REF.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR-ANON-PUBLIC-KEY`}
         </pre>
-        <p style={{opacity:.8}}>Then restart the dev server.</p>
+        <p style={{ opacity: 0.8 }}>Then restart the dev server.</p>
       </div>
     )
   }
 
   return (
     <ThemeProvider>
+      {/* 🔊 This keeps middleware/SSR in sync with client auth */}
+      <AuthListener />
       <SupabaseCtx.Provider value={supabase}>{children}</SupabaseCtx.Provider>
     </ThemeProvider>
   )
